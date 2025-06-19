@@ -30,6 +30,134 @@ show_descriptions = True  # Show full video descriptions
 # Custom CSS for better styling
 st.markdown("""
     <style>
+        /* Streamlit Header Adjustments */
+        header[data-testid="stHeader"] {
+            height: 60px !important;
+            background: rgba(0, 12, 32, 0.98) !important;
+            border-bottom: 1px solid rgba(0, 255, 204, 0.15) !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 999999 !important;
+        }
+
+        /* Main Content Padding */
+        .main .block-container {
+            padding-top: 60px !important;
+            max-width: 1400px !important;
+            margin: 0 auto !important;
+        }
+
+        /* Custom Header */
+        .custom-header {
+            position: fixed !important;
+            top: 60px !important;
+            left: 0 !important;
+            right: 0 !important;
+            height: 70px !important;
+            background: linear-gradient(135deg, rgba(0, 12, 32, 0.98) 0%, rgba(0, 20, 40, 0.98) 100%) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            border-bottom: 2px solid rgba(0, 255, 204, 0.15) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2) !important;
+            z-index: 999998 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 0 1rem !important;
+        }
+
+        /* Logo and Navigation Styles */
+        .header-logo {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+            text-decoration: none !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .header-logo-icon {
+            font-size: 1.8rem !important;
+            color: #00ffcc !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .header-logo-text {
+            color: #00ffcc !important;
+            font-size: 1.2rem !important;
+            font-weight: 700 !important;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3) !important;
+            white-space: nowrap !important;
+        }
+
+        .header-nav {
+            display: flex !important;
+            gap: 1rem !important;
+            align-items: center !important;
+        }
+
+        .nav-link {
+            color: #ffffff !important;
+            text-decoration: none !important;
+            font-size: 0.9rem !important;
+            font-weight: 500 !important;
+            padding: 0.4rem 0.8rem !important;
+            border-radius: 6px !important;
+            transition: all 0.3s ease !important;
+            background: rgba(0, 255, 204, 0.1) !important;
+            border: 1px solid rgba(0, 255, 204, 0.2) !important;
+            white-space: nowrap !important;
+        }
+
+        .nav-link:hover {
+            background: rgba(0, 255, 204, 0.2) !important;
+            transform: translateY(-2px) !important;
+            border-color: #00ffcc !important;
+            color: #00ffcc !important;
+        }
+
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            .custom-header {
+                padding: 0 0.5rem !important;
+                height: auto !important;
+                min-height: 60px !important;
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                gap: 0.5rem !important;
+                padding-top: 0.5rem !important;
+                padding-bottom: 0.5rem !important;
+            }
+
+            .header-logo {
+                margin-right: 0 !important;
+            }
+
+            .header-logo-text {
+                font-size: 1rem !important;
+            }
+
+            .header-nav {
+                gap: 0.5rem !important;
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+            }
+
+            .nav-link {
+                font-size: 0.8rem !important;
+                padding: 0.3rem 0.6rem !important;
+            }
+
+            /* Adjust main content padding for mobile */
+            .content-area {
+                margin-top: 180px !important;  /* Increased for mobile to ensure visibility */
+                padding: 1rem 0.5rem !important;
+            }
+        }
+
         /* Existing styles without scroll-related CSS */
         header[data-testid="stHeader"] {
             height: 60px !important;
@@ -44,7 +172,7 @@ st.markdown("""
 
         /* Main Content Padding */
         .main .block-container {
-            padding-top: 60px !important;  /* Match Streamlit header height */
+            padding-top: 60px !important;
             max-width: 1400px !important;
             margin: 0 auto !important;
         }
@@ -52,7 +180,7 @@ st.markdown("""
         /* Custom Header */
         .custom-header {
             position: fixed !important;
-            top: 60px !important;  /* Position below Streamlit header */
+            top: 60px !important;
             left: 0 !important;
             right: 0 !important;
             height: 70px !important;
@@ -116,7 +244,7 @@ st.markdown("""
 
         /* Content Area */
         .content-area {
-            margin-top: 130px !important;  /* Account for both headers */
+            margin-top: 160px !important;  /* Increased from 130px to add more space */
             padding: 2rem 1rem !important;
         }
 
@@ -441,16 +569,11 @@ st.markdown("""
         }
         
         .agent-title {
-            background: linear-gradient(120deg, #00ffcc 20%, #00ff99 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 4rem !important;
-            font-weight: 800 !important;
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
-            margin-bottom: 1rem;
-            letter-spacing: -1px;
-            text-align: center;
-            padding: 1rem 0;
+            margin-top: 2rem !important;
+            color: #00ffcc !important;
+            font-size: 2.5rem !important;
+            font-weight: 700 !important;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3) !important;
         }
 
         /* Search Box Styles */
@@ -847,141 +970,12 @@ st.markdown("""
             margin-bottom: 0.5rem !important;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
-
-        /* Mobile Responsive Styles */
-        @media (max-width: 768px) {
-            .main .block-container {
-                padding-left: 0.5rem !important;
-                padding-right: 0.5rem !important;
-            }
-
-            .stTextInput > div > div > input {
-                font-size: 1rem !important;
-                padding: 0 0.8rem !important;
-            }
-
-            .stButton > button {
-                padding: 0 1rem !important;
-                font-size: 1rem !important;
-            }
-
-            [data-testid="column"] {
-                width: 100% !important;
-                flex: 1 1 auto !important;
-            }
-
-            [data-testid="column"]:first-child {
-                padding-right: 0 !important;
-                margin-bottom: 0.5rem !important;
-            }
-
-            .video-card {
-                padding: 1rem !important;
-                margin-bottom: 1.5rem !important;
-            }
-
-            .video-card h3 {
-                font-size: 1.1rem !important;
-                line-height: 1.4 !important;
-            }
-
-            .video-player-container {
-                position: relative !important;
-                width: 100% !important;
-                padding-bottom: 56.25% !important; /* 16:9 Aspect Ratio */
-                height: 0 !important;
-                margin: 1rem 0 !important;
-            }
-
-            .video-player-container iframe {
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-            }
-        }
-
-        /* Video Card Styles */
-        .video-card {
-            background: rgba(0, 12, 32, 0.5);
-            border: 1px solid rgba(0, 255, 204, 0.2);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            transition: all 0.3s ease;
-        }
-
-        .video-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            border-color: rgba(0, 255, 204, 0.4);
-        }
-
-        .video-card h3 {
-            color: #00ffcc;
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            line-height: 1.5;
-        }
-
-        .video-player-container {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-            height: 0;
-            margin: 1.5rem 0;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .video-player-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 12px;
-        }
-
-        /* Title Section Spacing */
-        .title-section {
-            margin-top: 2rem !important;
-            margin-bottom: 3rem !important;
-            padding-top: 1rem !important;
-        }
-
-        /* Adjust logo size for better spacing */
-        .title-section .logo {
-            font-size: 4rem !important;
-            margin-bottom: 0.5rem !important;
-            display: block !important;
-        }
-
-        /* Results Section */
-        #results-section {
-            scroll-margin-top: 150px !important;  /* Account for fixed headers */
-        }
-
-        /* Search Form Wrapper */
-        .search-form {
-            display: flex !important;
-            gap: 1rem !important;
-            justify-content: center !important;
-            align-items: center !important;
-            margin-bottom: 2rem !important;
-        }
-
-        .stButton > button {
-            height: 100% !important;
-        }
     </style>
 
     <!-- Custom Header -->
     <div class="custom-header">
         <a href="#" class="header-logo">
-            <span class="header-logo-icon">🎓</span>
+            <div class="header-logo-icon">🎓</div>
             <span class="header-logo-text">Video Learning Hub</span>
         </a>
         <nav class="header-nav">
