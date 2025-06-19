@@ -15,9 +15,111 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# Initialize session state for search status
+if 'search_complete' not in st.session_state:
+    st.session_state.search_complete = False
+
+# Initialize YouTube agent
+youtube_agent = YouTubeSearchAgent()
+
+# Configuration variables
+max_results = 5  # Number of videos to display
+auto_play = False  # Auto-play setting for videos
+show_descriptions = True  # Show full video descriptions
+
 # Custom CSS for better styling
 st.markdown("""
     <style>
+        /* Existing styles without scroll-related CSS */
+        header[data-testid="stHeader"] {
+            height: 60px !important;
+            background: rgba(0, 12, 32, 0.98) !important;
+            border-bottom: 1px solid rgba(0, 255, 204, 0.15) !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 999999 !important;
+        }
+
+        /* Main Content Padding */
+        .main .block-container {
+            padding-top: 60px !important;  /* Match Streamlit header height */
+            max-width: 1400px !important;
+            margin: 0 auto !important;
+        }
+
+        /* Custom Header */
+        .custom-header {
+            position: fixed !important;
+            top: 60px !important;  /* Position below Streamlit header */
+            left: 0 !important;
+            right: 0 !important;
+            height: 70px !important;
+            background: linear-gradient(135deg, rgba(0, 12, 32, 0.98) 0%, rgba(0, 20, 40, 0.98) 100%) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            border-bottom: 2px solid rgba(0, 255, 204, 0.15) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2) !important;
+            z-index: 999998 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 0 2rem !important;
+        }
+
+        .header-logo {
+            display: flex !important;
+            align-items: center !important;
+            gap: 1rem !important;
+            text-decoration: none !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .header-logo-icon {
+            font-size: 2rem !important;
+            color: #00ffcc !important;
+        }
+
+        .header-logo-text {
+            color: #00ffcc !important;
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .header-nav {
+            display: flex !important;
+            gap: 2rem !important;
+            align-items: center !important;
+        }
+
+        .nav-link {
+            color: #ffffff !important;
+            text-decoration: none !important;
+            font-size: 1.1rem !important;
+            font-weight: 500 !important;
+            padding: 0.5rem 1rem !important;
+            border-radius: 8px !important;
+            transition: all 0.3s ease !important;
+            background: rgba(0, 255, 204, 0.1) !important;
+            border: 1px solid rgba(0, 255, 204, 0.2) !important;
+        }
+
+        .nav-link:hover {
+            background: rgba(0, 255, 204, 0.2) !important;
+            transform: translateY(-2px) !important;
+            border-color: #00ffcc !important;
+            color: #00ffcc !important;
+            box-shadow: 0 4px 12px rgba(0, 255, 204, 0.2) !important;
+        }
+
+        /* Content Area */
+        .content-area {
+            margin-top: 130px !important;  /* Account for both headers */
+            padding: 2rem 1rem !important;
+        }
+
         /* Hide hamburger menu */
         #MainMenu {
             visibility: visible !important;
@@ -34,11 +136,11 @@ st.markdown("""
             top: 0;
             left: 0;
             right: 0;
-            height: 80px !important;
-            background: linear-gradient(135deg, rgba(0, 12, 32, 0.98) 0%, rgba(0, 20, 40, 0.98) 100%) !important;
+            height: 60px !important;
+            background: rgba(0, 12, 32, 0.98) !important;
             backdrop-filter: blur(10px) !important;
             -webkit-backdrop-filter: blur(10px) !important;
-            border-bottom: 2px solid rgba(0, 255, 204, 0.15) !important;
+            border-bottom: 1px solid rgba(0, 255, 204, 0.15) !important;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2) !important;
             z-index: 999999 !important;
             display: flex !important;
@@ -111,10 +213,11 @@ st.markdown("""
             fill: #00ffcc !important;
         }
 
-        /* Add padding to main content to account for fixed header */
+        /* Main Content */
         .main .block-container {
-            padding-top: 110px !important;
+            padding-top: 130px !important;
             max-width: 1400px !important;
+            margin: 0 auto !important;
         }
 
         /* Modern Fixed Header */
@@ -308,7 +411,7 @@ st.markdown("""
 
         /* Smooth Scrolling */
         html {
-            scroll-behavior: smooth;
+            scroll-behavior: smooth !important;
         }
 
         /* Section IDs */
@@ -841,51 +944,64 @@ st.markdown("""
             height: 100%;
             border-radius: 12px;
         }
+
+        /* Title Section Spacing */
+        .title-section {
+            margin-top: 2rem !important;
+            margin-bottom: 3rem !important;
+            padding-top: 1rem !important;
+        }
+
+        /* Adjust logo size for better spacing */
+        .title-section .logo {
+            font-size: 4rem !important;
+            margin-bottom: 0.5rem !important;
+            display: block !important;
+        }
+
+        /* Results Section */
+        #results-section {
+            scroll-margin-top: 150px !important;  /* Account for fixed headers */
+        }
+
+        /* Search Form Wrapper */
+        .search-form {
+            display: flex !important;
+            gap: 1rem !important;
+            justify-content: center !important;
+            align-items: center !important;
+            margin-bottom: 2rem !important;
+        }
+
+        .stButton > button {
+            height: 100% !important;
+        }
     </style>
 
-    <!-- Modern Fixed Header -->
-    <header class="fixed-header">
+    <!-- Custom Header -->
+    <div class="custom-header">
         <a href="#" class="header-logo">
             <span class="header-logo-icon">🎓</span>
             <span class="header-logo-text">Video Learning Hub</span>
         </a>
         <nav class="header-nav">
-            <a href="#search-section" class="nav-link">
-                <span class="nav-icon">🔍</span>
-                Search
-            </a>
-            <a href="#preferences-section" class="nav-link">
-                <span class="nav-icon">⚙️</span>
-                Preferences
-            </a>
+            <a href="#search-section" class="nav-link">🔍 Search</a>
+            <a href="#preferences-section" class="nav-link">⚙️ Preferences</a>
         </nav>
-    </header>
+    </div>
 
-    <div class="main-content">
-""", unsafe_allow_html=True)
-
-# Title and Description
-st.markdown("""
-    <div style="text-align: center; margin-bottom: 2rem;">
-        <div style="font-size: 5rem; margin-bottom: 1rem;">🎓</div>
-        <h1 class="agent-title">Video Learning Hub</h1>
+    <!-- Content Area -->
+    <div class="content-area">
+        <div style="text-align: center;">
+            <h1 class="agent-title">Video Learning Hub</h1>
+            <div class="header-container">
+                <p style="font-size: 1.4rem; color: #ffffff; font-weight: 600; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); text-align: center;">
+                    Discover and learn from the best educational content on YouTube
+                </p>
+            </div>
+        </div>
     </div>
 """, unsafe_allow_html=True)
-
-st.markdown("""
-    <div class="header-container">
-        <p style="font-size: 1.4rem; color: #ffffff; font-weight: 600; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); text-align: center;">
-            Discover and learn from the best educational content on YouTube
-        </p>
-    </div>
-""", unsafe_allow_html=True)
-
-# Initialize YouTube Search Agent
-youtube_agent = YouTubeSearchAgent()
-
-# Initialize session state for search status
-if 'search_complete' not in st.session_state:
-    st.session_state.search_complete = False
 
 # Search Section with ID
 st.markdown('<div id="search-section">', unsafe_allow_html=True)
@@ -899,6 +1015,63 @@ with search_col1:
                          label_visibility="visible")
 with search_col2:
     search_button = st.button("🔍 Explore", use_container_width=True)
+
+# Handle search
+if query and search_button:
+    try:
+        st.session_state.search_complete = False
+        with st.spinner(""):
+            if not st.session_state.search_complete:
+                st.markdown('<p class="loading">🔍 Searching for the best educational videos...</p>', unsafe_allow_html=True)
+            
+            videos = youtube_agent.search_videos(
+                query, 
+                max_results=max_results
+            )
+            
+            st.session_state.search_complete = True
+            
+            if videos:
+                st.markdown('<h2 style="color: #00ffcc; font-size: 2rem; font-weight: 700; margin: 2rem 0;">📺 Learning Resources</h2>', unsafe_allow_html=True)
+                
+                for video in videos:
+                    st.markdown(f"""
+                        <div class="video-card">
+                            <h3>{video['title']}</h3>
+                            <div class="video-player-container">
+                                <iframe
+                                    src="https://www.youtube.com/embed/{video['video_id']}?autoplay={1 if auto_play else 0}"
+                                    frameborder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen
+                                ></iframe>
+                            </div>
+                            <p><strong>Channel:</strong> {video['channel']}</p>
+                            <p>{video['description'][:200] + '...' if not show_descriptions else video['description']}</p>
+                            <a href="{video['url']}" target="_blank" class="watch-button">
+                                <button style="
+                                    background: rgba(0, 255, 204, 0.1);
+                                    color: #00ffcc;
+                                    border: 1px solid rgba(0, 255, 204, 0.3);
+                                    padding: 0.5rem 1rem;
+                                    border-radius: 8px;
+                                    font-size: 1rem;
+                                    cursor: pointer;
+                                    transition: all 0.3s ease;
+                                    margin-top: 1rem;
+                                    width: 100%;
+                                ">🔗 Watch on YouTube</button>
+                            </a>
+                        </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.error("No videos found for your query. Please try different keywords.")
+                
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
+        st.info("Please try again with a different search term or check your internet connection.")
+
+st.markdown('</div>', unsafe_allow_html=True)  # Close search section
 
 # Educational Search Suggestions
 st.markdown('<div class="suggestions-container">', unsafe_allow_html=True)
@@ -961,61 +1134,6 @@ st.markdown('</div></div>', unsafe_allow_html=True)
 
 # Close main-content div
 st.markdown('</div>', unsafe_allow_html=True)
-
-# Handle search
-if query and search_button:
-    try:
-        st.session_state.search_complete = False
-        with st.spinner(""):
-            if not st.session_state.search_complete:
-                st.markdown('<p class="loading">🔍 Searching for the best educational videos...</p>', unsafe_allow_html=True)
-            
-            videos = youtube_agent.search_videos(
-                query, 
-                max_results=max_results
-            )
-            
-            st.session_state.search_complete = True
-            
-            if videos:
-                st.markdown('<h2 style="color: #00ffcc; font-size: 2rem; font-weight: 700; margin: 2rem 0;">📺 Learning Resources</h2>', unsafe_allow_html=True)
-                
-                for video in videos:
-                    st.markdown(f"""
-                        <div class="video-card">
-                            <h3>{video['title']}</h3>
-                            <div class="video-player-container">
-                                <iframe
-                                    src="https://www.youtube.com/embed/{video['video_id']}?autoplay={1 if auto_play else 0}"
-                                    frameborder="0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowfullscreen
-                                ></iframe>
-                            </div>
-                            <p><strong>Channel:</strong> {video['channel']}</p>
-                            <p>{video['description'][:200] + '...' if not show_descriptions else video['description']}</p>
-                            <a href="{video['url']}" target="_blank" class="watch-button">
-                                <button style="
-                                    background: rgba(0, 255, 204, 0.1);
-                                    color: #00ffcc;
-                                    border: 1px solid rgba(0, 255, 204, 0.3);
-                                    padding: 0.5rem 1rem;
-                                    border-radius: 8px;
-                                    font-size: 1rem;
-                                    cursor: pointer;
-                                    transition: all 0.3s ease;
-                                    margin-top: 1rem;
-                                    width: 100%;
-                                ">🔗 Watch on YouTube</button>
-                            </a>
-                        </div>
-                    """, unsafe_allow_html=True)
-            else:
-                st.error("No videos found for your query. Please try different keywords.")
-                
-    except Exception as e:
-        st.error(f"An error occurred: {str(e)}")
-        st.info("Please try again with a different search term or check your internet connection.")
 
 # Footer
 st.markdown("""
