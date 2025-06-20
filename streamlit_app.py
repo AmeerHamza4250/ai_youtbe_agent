@@ -569,11 +569,20 @@ st.markdown("""
         }
         
         .agent-title {
-            margin-top: 2rem !important;
+            margin-top: 1rem !important;
             color: #00ffcc !important;
             font-size: 2.5rem !important;
             font-weight: 700 !important;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .educational-logo {
+            font-size: 4rem !important;
+            margin-bottom: 0.5rem !important;
+            color: #00ffcc !important;
+            text-shadow: 2px 2px 8px rgba(0,255,204,0.3);
+            display: block;
+            line-height: 1;
         }
 
         /* Search Box Styles */
@@ -970,7 +979,46 @@ st.markdown("""
             margin-bottom: 0.5rem !important;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
+
+        .desktop-only { display: inline-block !important; }
+        .mobile-only { display: none !important; }
+        @media screen and (max-width: 768px) {
+            .desktop-only { display: none !important; }
+            .mobile-only { display: block !important; }
+            .hamburger {
+                background: none;
+                border: none;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                width: 40px;
+                height: 40px;
+                cursor: pointer;
+                gap: 5px;
+                margin-left: 0.5rem;
+            }
+            .hamburger span {
+                display: block;
+                width: 28px;
+                height: 4px;
+                background: #00ffcc;
+                border-radius: 2px;
+                transition: all 0.3s;
+            }
+        }
     </style>
+
+    <script>
+    function openMobileDrawer() {
+        document.getElementById('mobile-drawer').style.right = '0';
+        document.getElementById('mobile-drawer-overlay').style.display = 'block';
+    }
+    function closeMobileDrawer() {
+        document.getElementById('mobile-drawer').style.right = '-100vw';
+        document.getElementById('mobile-drawer-overlay').style.display = 'none';
+    }
+    </script>
 
     <!-- Custom Header -->
     <div class="custom-header">
@@ -979,14 +1027,31 @@ st.markdown("""
             <span class="header-logo-text">Video Learning Hub</span>
         </a>
         <nav class="header-nav">
-            <a href="#search-section" class="nav-link">🔍 Search</a>
-            <a href="#preferences-section" class="nav-link">⚙️ Preferences</a>
+            <a href="#search-section" class="nav-link desktop-only">🔍 Search</a>
+            <a href="#preferences-section" class="nav-link desktop-only">⚙️ Preferences</a>
+            <button class="hamburger mobile-only" aria-label="Open menu" onclick="openMobileDrawer()">
+                <span></span><span></span><span></span>
+            </button>
         </nav>
+    </div>
+
+    <!-- Mobile Drawer Overlay -->
+    <div id="mobile-drawer-overlay" class="mobile-only" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:1000001;" onclick="closeMobileDrawer()"></div>
+    <!-- Mobile Drawer Side Panel -->
+    <div id="mobile-drawer" class="mobile-only" style="position:fixed;top:0;right:-100vw;width:85vw;max-width:400px;height:100vh;background:linear-gradient(135deg,#0a192f 0%,#112240 100%);z-index:1000002;transition:right 0.3s cubic-bezier(.4,0,.2,1);box-shadow:-4px 0 30px rgba(0,0,0,0.3);padding:2rem 1.5rem;overflow-y:auto;">
+        <button style="background:none;border:none;position:absolute;top:1.2rem;right:1.2rem;font-size:2rem;color:#00ffcc;cursor:pointer;" aria-label="Close menu" onclick="closeMobileDrawer()">&times;</button>
+        <div style="margin-top:2.5rem;">
+            <div class="educational-logo" style="font-size:2.5rem;margin-bottom:1rem;">🎓</div>
+            <h2 style="color:#00ffcc;font-size:1.5rem;font-weight:700;margin-bottom:2rem;">Menu</h2>
+            <div id="mobile-search-section"></div>
+            <div id="mobile-preferences-section"></div>
+        </div>
     </div>
 
     <!-- Content Area -->
     <div class="content-area">
         <div style="text-align: center;">
+            <div class="educational-logo" aria-label="Educational Logo" title="Educational Logo">🎓</div>
             <h1 class="agent-title">Video Learning Hub</h1>
             <div class="header-container">
                 <p style="font-size: 1.4rem; color: #ffffff; font-weight: 600; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); text-align: center;">
@@ -998,26 +1063,27 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Search Section with ID
-st.markdown('<div id="search-section">', unsafe_allow_html=True)
+st.markdown('<div id="search-section" class="desktop-only">', unsafe_allow_html=True)
 
-# Search bar with Explore button
-search_col1, search_col2 = st.columns([4, 1])
-with search_col1:
-    query = st.text_input("What would you like to learn about today?", 
-                         placeholder="Enter any topic, question, or skill you want to learn...",
-                         key="search_input",
-                         label_visibility="visible")
-with search_col2:
-    search_button = st.button("🔍 Explore", use_container_width=True)
+# Desktop search
+if st.session_state.get('mobile_drawer_open', False) is False:
+    search_col1, search_col2 = st.columns([4, 1])
+    with search_col1:
+        query = st.text_input("What would you like to learn about today?", 
+                             placeholder="Enter any topic, question, or skill you want to learn...",
+                             key="search_input",
+                             label_visibility="visible")
+    with search_col2:
+        search_button = st.button("🔍 Explore", use_container_width=True)
+else:
+    query = st.session_state.get('mobile_query', '')
+    search_button = st.session_state.get('mobile_search_button', False)
 
 # Handle search
 if query and search_button:
     try:
         st.session_state.search_complete = False
         with st.spinner(""):
-            if not st.session_state.search_complete:
-                st.markdown('<p class="loading">🔍 Searching for the best educational videos...</p>', unsafe_allow_html=True)
-            
             videos = youtube_agent.search_videos(
                 query, 
                 max_results=max_results
@@ -1101,28 +1167,32 @@ with col3:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Preferences Section with ID
-st.markdown('<div id="preferences-section">', unsafe_allow_html=True)
+st.markdown('<div id="preferences-section" class="desktop-only">', unsafe_allow_html=True)
 st.markdown('<div class="suggestions-container">', unsafe_allow_html=True)
 st.markdown("<h3 style='color: #00ffcc; margin-bottom: 1.5rem;'>Search Preferences</h3>", unsafe_allow_html=True)
 
 # Number of videos slider
-st.markdown('<div class="preferences-option">', unsafe_allow_html=True)
-st.markdown('<p class="preference-label">Number of Results</p>', unsafe_allow_html=True)
-max_results = st.slider("", 2, 8, 4, label_visibility="collapsed")
-st.markdown('</div>', unsafe_allow_html=True)
+if st.session_state.get('mobile_drawer_open', False) is False:
+    st.markdown('<div class="preferences-option">', unsafe_allow_html=True)
+    st.markdown('<p class="preference-label">Number of Results</p>', unsafe_allow_html=True)
+    max_results = st.slider("", 2, 8, 4, label_visibility="collapsed")
+    st.markdown('</div>', unsafe_allow_html=True)
+else:
+    max_results = st.session_state.get('mobile_max_results', 4)
 
 # Playback Options
-st.markdown('<div class="preferences-option">', unsafe_allow_html=True)
-st.markdown('<p class="preference-label">Playback Options</p>', unsafe_allow_html=True)
-col1, col2 = st.columns(2)
-
-with col1:
-    auto_play = st.checkbox("Enable Autoplay", value=False)
-
-with col2:
-    show_descriptions = st.checkbox("Show Full Descriptions", value=False)
-
-st.markdown('</div>', unsafe_allow_html=True)
+if st.session_state.get('mobile_drawer_open', False) is False:
+    st.markdown('<div class="preferences-option">', unsafe_allow_html=True)
+    st.markdown('<p class="preference-label">Playback Options</p>', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        auto_play = st.checkbox("Enable Autoplay", value=False)
+    with col2:
+        show_descriptions = st.checkbox("Show Full Descriptions", value=False)
+    st.markdown('</div>', unsafe_allow_html=True)
+else:
+    auto_play = st.session_state.get('mobile_auto_play', False)
+    show_descriptions = st.session_state.get('mobile_show_descriptions', False)
 
 st.markdown('</div></div>', unsafe_allow_html=True)
 
