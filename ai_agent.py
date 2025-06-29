@@ -39,7 +39,7 @@ def main():
     print("Type 'quit' to exit")
     
     while True:
-        user_input = input("\n🔍 What would you like to learn about? ")
+        user_input = input("\nSEARCH What would you like to learn about? ")
         
         if user_input.lower() == 'quit':
             print("\nThank you for using the AI Learning Assistant! Goodbye! 👋")

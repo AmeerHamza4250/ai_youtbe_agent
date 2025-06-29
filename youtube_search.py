@@ -70,7 +70,7 @@ class YouTubeSearchAgent:
             return None
 
 def main():
-    print("🎥 YouTube Search Agent")
+    print("VIDEO YouTube Search Agent")
     print("Type 'quit' to exit")
     
     agent = YouTubeSearchAgent()
@@ -82,7 +82,7 @@ def main():
             print("\nThank you for using YouTube Search Agent! Goodbye! 👋")
             break
         
-        print("\nSearching for videos... 🔍")
+        print("\nSearching for videos... SEARCH")
         videos = agent.search_videos(query)
         
         if videos:

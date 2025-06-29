@@ -19,13 +19,21 @@ st.set_page_config(
 if 'search_complete' not in st.session_state:
     st.session_state.search_complete = False
 
+# Initialize session state for preferences
+if 'auto_play' not in st.session_state:
+    st.session_state.auto_play = False
+if 'show_descriptions' not in st.session_state:
+    st.session_state.show_descriptions = False
+if 'max_results' not in st.session_state:
+    st.session_state.max_results = 6
+
 # Initialize YouTube agent
 youtube_agent = YouTubeSearchAgent()
 
 # Configuration variables
-max_results = 5  # Number of videos to display
-auto_play = False  # Auto-play setting for videos
-show_descriptions = True  # Show full video descriptions
+# max_results = 5  # Number of videos to display
+# auto_play = False  # Auto-play setting for videos
+# show_descriptions = True  # Show full video descriptions
 
 # Custom CSS for better styling
 st.markdown("""
@@ -156,6 +164,88 @@ st.markdown("""
                 margin-top: 180px !important;  /* Increased for mobile to ensure visibility */
                 padding: 1rem 0.5rem !important;
             }
+            
+            /* Improve mobile grid layout */
+            .video-grid-container {
+                grid-template-columns: 1fr !important;
+                gap: 1.5rem !important;
+                padding: 0 0.5rem !important;
+            }
+            
+            /* Adjust suggestion tags for mobile */
+            .suggestion-tag {
+                font-size: 1rem !important;
+                padding: 0.6rem 1rem !important;
+                margin: 0.3rem 0 !important;
+            }
+            
+            /* Improve preferences layout on mobile */
+            .preferences-option {
+                padding: 1rem !important;
+                margin: 0.5rem 0 !important;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            .content-area {
+                margin-top: 200px !important;
+                padding: 0.5rem !important;
+            }
+            
+            .video-grid-container {
+                gap: 1rem !important;
+                padding: 0 0.25rem !important;
+            }
+            
+            .suggestions-container {
+                padding: 1.5rem !important;
+                margin: 1rem 0 !important;
+            }
+            
+            .suggestion-tag {
+                font-size: 0.9rem !important;
+                padding: 0.5rem 0.8rem !important;
+            }
+            
+            .preferences-option {
+                padding: 0.8rem !important;
+            }
+        }
+        
+        /* Fix column alignment issues */
+        [data-testid="column"] {
+            display: flex !important;
+            align-items: stretch !important;
+            padding: 0.5rem !important;
+        }
+        
+        /* Ensure proper spacing between sections */
+        .stMarkdown {
+            margin-bottom: 0 !important;
+        }
+        
+        /* Improve button alignment */
+        .stButton {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        
+        /* Fix checkbox alignment */
+        .stCheckbox > div {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        
+        /* Improve slider alignment */
+        .stSlider {
+            margin: 1rem 0 !important;
+        }
+        
+        /* Ensure consistent spacing */
+        .element-container {
+            margin-bottom: 1rem !important;
         }
 
         /* Existing styles without scroll-related CSS */
@@ -733,7 +823,7 @@ st.markdown("""
             box-shadow: 0 8px 30px rgba(0, 255, 204, 0.15);
             border-color: rgba(0, 255, 204, 0.3);
         }
-
+        
         .video-card h3 {
             color: #00ffcc !important;
             font-size: 1.6rem !important;
@@ -742,7 +832,7 @@ st.markdown("""
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
             line-height: 1.4 !important;
         }
-
+        
         .video-card p {
             color: #ffffff !important;
             font-size: 1.2rem !important;
@@ -751,7 +841,7 @@ st.markdown("""
             margin: 1rem 0 !important;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
-
+        
         .video-card strong {
             color: #00ffcc !important;
             font-weight: 700 !important;
@@ -781,16 +871,16 @@ st.markdown("""
         /* Slider and Checkbox Styles */
         .stSlider div[data-baseweb="slider"] {
             margin-top: 1rem;
-        }
+            }
 
         .stSlider [data-testid="stTickBar"] {
             color: #ffffff !important;
-        }
-
+            }
+            
         .stSlider [data-testid="stTickBarMin"], 
         .stSlider [data-testid="stTickBarMax"] {
             color: #ffffff !important;
-            font-size: 1rem !important;
+                font-size: 1rem !important;
         }
 
         /* Section Headers */
@@ -798,19 +888,19 @@ st.markdown("""
             color: #ffffff !important;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
             margin-bottom: 1rem !important;
-        }
-
+            }
+            
         h3 {
             font-size: 1.8rem !important;
             font-weight: 700 !important;
-        }
-
+            }
+            
         h4 {
             font-size: 1.4rem !important;
             font-weight: 600 !important;
             color: #00ffcc !important;
         }
-        
+
         /* Footer Styles */
         .footer {
             background: rgba(17, 34, 64, 0.9);
@@ -1074,7 +1164,9 @@ if st.session_state.get('mobile_drawer_open', False) is False:
                              key="search_input",
                              label_visibility="visible")
     with search_col2:
-        search_button = st.button("🔍 Explore", use_container_width=True)
+        st.markdown('<div style="margin-top: 1.5rem;">', unsafe_allow_html=True)
+        search_button = st.button("🔍 Explore", use_container_width=True, key="search_button")
+        st.markdown('</div>', unsafe_allow_html=True)
 else:
     query = st.session_state.get('mobile_query', '')
     search_button = st.session_state.get('mobile_search_button', False)
@@ -1086,7 +1178,7 @@ if query and search_button:
         with st.spinner(""):
             videos = youtube_agent.search_videos(
                 query, 
-                max_results=max_results
+                max_results=st.session_state.max_results
             )
             
             st.session_state.search_complete = True
@@ -1094,36 +1186,206 @@ if query and search_button:
             if videos:
                 st.markdown('<h2 style="color: #00ffcc; font-size: 2rem; font-weight: 700; margin: 2rem 0;">📺 Learning Resources</h2>', unsafe_allow_html=True)
                 
+                # Add CSS for proper video grid layout
+                st.markdown("""
+                <style>
+                .video-grid-container {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                    gap: 2rem;
+                    margin: 2rem 0;
+                    padding: 0 1rem;
+                }
+                
+                .video-card {
+                    background: rgba(17, 34, 64, 0.95);
+                    border-radius: 16px;
+                    overflow: hidden;
+                    backdrop-filter: blur(15px);
+                    border: 1px solid rgba(0, 255, 204, 0.15);
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                    position: relative;
+                    height: 500px;
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                .video-card:hover {
+                    transform: translateY(-8px) scale(1.02);
+                    box-shadow: 0 20px 40px rgba(0, 255, 204, 0.2);
+                    border-color: rgba(0, 255, 204, 0.4);
+                }
+                
+                .video-thumbnail {
+                    width: 100%;
+                    height: 180px;
+                    object-fit: cover;
+                    border-radius: 16px 16px 0 0;
+                    transition: transform 0.3s ease;
+                }
+                
+                .video-card:hover .video-thumbnail {
+                    transform: scale(1.05);
+                }
+                
+                .video-content {
+                    padding: 1.5rem;
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                .video-title {
+                    color: #00ffcc !important;
+                    font-size: 1.1rem !important;
+                    font-weight: 700 !important;
+                    margin-bottom: 0.75rem !important;
+                    line-height: 1.4 !important;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                    min-height: 2.8rem;
+                }
+                
+                .video-channel {
+                    color: #ffffff !important;
+                    font-size: 0.85rem !important;
+                    font-weight: 500 !important;
+                    margin-bottom: 0.75rem !important;
+                    opacity: 0.9;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+                
+                .video-description {
+                    color: rgba(255, 255, 255, 0.85) !important;
+                    font-size: 0.8rem !important;
+                    line-height: 1.5 !important;
+                    margin-bottom: 1.25rem !important;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 3;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                    flex: 1;
+                }
+                
+                .video-actions {
+                    margin-top: auto;
+                    padding-top: 1rem;
+                }
+                
+                .watch-btn {
+                    background: linear-gradient(135deg, #00ffcc, #00ff99);
+                    color: #0a192f !important;
+                    padding: 0.75rem 1.25rem;
+                    border-radius: 10px;
+                    border: none;
+                    font-weight: 600;
+                    font-size: 0.85rem;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    box-shadow: 0 4px 15px rgba(0, 255, 204, 0.2);
+                    cursor: pointer;
+                }
+                
+                .watch-btn:hover {
+                    background: linear-gradient(135deg, #00ff99, #00ffcc);
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(0, 255, 204, 0.4);
+                    color: #0a192f !important;
+                    text-decoration: none;
+                }
+                
+                /* Responsive Design */
+                @media (max-width: 1200px) {
+                    .video-grid-container {
+                        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                        gap: 1.5rem;
+                    }
+                }
+                
+                @media (max-width: 768px) {
+                    .video-grid-container {
+                        grid-template-columns: 1fr;
+                        gap: 1.5rem;
+                        padding: 0 0.5rem;
+                    }
+                    
+                    .video-card {
+                        height: 450px;
+                    }
+                    
+                    .video-thumbnail {
+                        height: 160px;
+                    }
+                    
+                    .video-content {
+                        padding: 1.25rem;
+                    }
+                }
+                
+                @media (max-width: 480px) {
+                    .video-grid-container {
+                        gap: 1rem;
+                    }
+                    
+                    .video-card {
+                        height: 420px;
+                    }
+                    
+                    .video-thumbnail {
+                        height: 140px;
+                    }
+                    
+                    .video-content {
+                        padding: 1rem;
+                    }
+                    
+                    .video-title {
+                        font-size: 1rem !important;
+                    }
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                
+                # Start video grid
+                st.markdown('<div class="video-grid-container">', unsafe_allow_html=True)
+                
                 for video in videos:
+                    # Truncate description for card view
+                    short_desc = video['description'][:120] + '...' if len(video['description']) > 120 else video['description']
+                    
                     st.markdown(f"""
                         <div class="video-card">
-                            <h3>{video['title']}</h3>
-                            <div class="video-player-container">
-                                <iframe
-                                    src="https://www.youtube.com/embed/{video['video_id']}?autoplay={1 if auto_play else 0}"
-                                    frameborder="0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowfullscreen
-                                ></iframe>
+                            <img src="https://img.youtube.com/vi/{video['video_id']}/hqdefault.jpg" 
+                                 alt="{video['title']}" 
+                                 class="video-thumbnail"
+                                 onerror="this.src='https://via.placeholder.com/350x200/0a192f/00ffcc?text=Video+Thumbnail'">
+                            <div class="video-content">
+                                <h3 class="video-title">{video['title']}</h3>
+                                <div class="video-channel">📺 {video['channel']}</div>
+                                <p class="video-description">{short_desc}</p>
+                                <div class="video-actions">
+                                    <a href="{video['url']}" target="_blank" class="watch-btn">
+                                        🎥 Watch on YouTube
+                                    </a>
+                                </div>
                             </div>
-                            <p><strong>Channel:</strong> {video['channel']}</p>
-                            <p>{video['description'][:200] + '...' if not show_descriptions else video['description']}</p>
-                            <a href="{video['url']}" target="_blank" class="watch-button">
-                                <button style="
-                                    background: rgba(0, 255, 204, 0.1);
-                                    color: #00ffcc;
-                                    border: 1px solid rgba(0, 255, 204, 0.3);
-                                    padding: 0.5rem 1rem;
-                                    border-radius: 8px;
-                                    font-size: 1rem;
-                                    cursor: pointer;
-                                    transition: all 0.3s ease;
-                                    margin-top: 1rem;
-                                    width: 100%;
-                                ">🔗 Watch on YouTube</button>
-                            </a>
                         </div>
                     """, unsafe_allow_html=True)
+                
+                # Close video grid
+                st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.error("No videos found for your query. Please try different keywords.")
                 
@@ -1133,71 +1395,89 @@ if query and search_button:
 
 st.markdown('</div>', unsafe_allow_html=True)  # Close search section
 
-# Educational Search Suggestions
-st.markdown('<div class="suggestions-container">', unsafe_allow_html=True)
-st.markdown("<h3 style='color: #64ffda; margin-bottom: 1rem;'>Popular Topics</h3>", unsafe_allow_html=True)
+# Add spacing between search results and popular topics
+st.markdown('<div style="margin: 4rem 0;"></div>', unsafe_allow_html=True)
 
-# Create columns for different subject areas
-col1, col2, col3 = st.columns(3)
+# Educational Search Suggestions
+st.markdown('<div class="suggestions-container" style="margin: 2rem 0; padding: 2.5rem; background: rgba(17, 34, 64, 0.9); border-radius: 15px; border: 1px solid rgba(0, 255, 204, 0.1); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);">', unsafe_allow_html=True)
+st.markdown("<h3 style='color: #64ffda; margin-bottom: 2rem; text-align: center; font-size: 1.8rem; font-weight: 700;'>Popular Topics</h3>", unsafe_allow_html=True)
+
+# Create responsive columns for different subject areas
+col1, col2, col3 = st.columns([1, 1, 1])
 
 with col1:
     st.markdown("""
-        <h4 style='color: #64ffda; margin-bottom: 0.5rem;'>Science & Math</h4>
-        <div class="suggestion-tag">Quantum Physics</div>
-        <div class="suggestion-tag">Calculus Basics</div>
-        <div class="suggestion-tag">Chemistry Lab</div>
+        <div style="text-align: center; padding: 1rem;">
+            <h4 style='color: #64ffda; margin-bottom: 1rem; font-size: 1.2rem; font-weight: 600;'>🔬 Science & Math</h4>
+            <div class="suggestion-tag" style="margin: 0.5rem 0; display: block; text-align: center;">Quantum Physics</div>
+            <div class="suggestion-tag" style="margin: 0.5rem 0; display: block; text-align: center;">Calculus Basics</div>
+            <div class="suggestion-tag" style="margin: 0.5rem 0; display: block; text-align: center;">Chemistry Lab</div>
+        </div>
     """, unsafe_allow_html=True)
 
 with col2:
     st.markdown("""
-        <h4 style='color: #64ffda; margin-bottom: 0.5rem;'>Technology</h4>
-        <div class="suggestion-tag">Python Programming</div>
-        <div class="suggestion-tag">Web Development</div>
-        <div class="suggestion-tag">AI & Machine Learning</div>
+        <div style="text-align: center; padding: 1rem;">
+            <h4 style='color: #64ffda; margin-bottom: 1rem; font-size: 1.2rem; font-weight: 600;'>💻 Technology</h4>
+            <div class="suggestion-tag" style="margin: 0.5rem 0; display: block; text-align: center;">Python Programming</div>
+            <div class="suggestion-tag" style="margin: 0.5rem 0; display: block; text-align: center;">Web Development</div>
+            <div class="suggestion-tag" style="margin: 0.5rem 0; display: block; text-align: center;">AI & Machine Learning</div>
+        </div>
     """, unsafe_allow_html=True)
 
 with col3:
     st.markdown("""
-        <h4 style='color: #64ffda; margin-bottom: 0.5rem;'>General Education</h4>
-        <div class="suggestion-tag">World History</div>
-        <div class="suggestion-tag">Literature</div>
-        <div class="suggestion-tag">Study Skills</div>
+        <div style="text-align: center; padding: 1rem;">
+            <h4 style='color: #64ffda; margin-bottom: 1rem; font-size: 1.2rem; font-weight: 600;'>📚 General Education</h4>
+            <div class="suggestion-tag" style="margin: 0.5rem 0; display: block; text-align: center;">World History</div>
+            <div class="suggestion-tag" style="margin: 0.5rem 0; display: block; text-align: center;">Literature</div>
+            <div class="suggestion-tag" style="margin: 0.5rem 0; display: block; text-align: center;">Study Skills</div>
+        </div>
     """, unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
+# Add spacing between popular topics and preferences
+st.markdown('<div style="margin: 4rem 0;"></div>', unsafe_allow_html=True)
+
 # Preferences Section with ID
 st.markdown('<div id="preferences-section" class="desktop-only">', unsafe_allow_html=True)
-st.markdown('<div class="suggestions-container">', unsafe_allow_html=True)
-st.markdown("<h3 style='color: #00ffcc; margin-bottom: 1.5rem;'>Search Preferences</h3>", unsafe_allow_html=True)
+st.markdown('<div class="suggestions-container" style="margin: 2rem 0; padding: 2.5rem; background: rgba(17, 34, 64, 0.9); border-radius: 15px; border: 1px solid rgba(0, 255, 204, 0.1); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);">', unsafe_allow_html=True)
+st.markdown("<h3 style='color: #00ffcc; margin-bottom: 2rem; text-align: center; font-size: 1.8rem; font-weight: 700;'>⚙️ Search Preferences</h3>", unsafe_allow_html=True)
 
 # Number of videos slider
 if st.session_state.get('mobile_drawer_open', False) is False:
-    st.markdown('<div class="preferences-option">', unsafe_allow_html=True)
-    st.markdown('<p class="preference-label">Number of Results</p>', unsafe_allow_html=True)
-    max_results = st.slider("", 2, 8, 4, label_visibility="collapsed")
+    st.markdown('<div class="preferences-option" style="margin-bottom: 2rem;">', unsafe_allow_html=True)
+    st.markdown('<p class="preference-label" style="text-align: center; margin-bottom: 1rem;">Number of Results</p>', unsafe_allow_html=True)
+    new_max_results = st.slider("", 2, 12, st.session_state.max_results, label_visibility="collapsed", key="max_results_slider")
+    if new_max_results != st.session_state.max_results:
+        st.session_state.max_results = new_max_results
     st.markdown('</div>', unsafe_allow_html=True)
 else:
-    max_results = st.session_state.get('mobile_max_results', 4)
+    st.session_state.max_results = st.session_state.get('mobile_max_results', 6)
 
 # Playback Options
 if st.session_state.get('mobile_drawer_open', False) is False:
     st.markdown('<div class="preferences-option">', unsafe_allow_html=True)
-    st.markdown('<p class="preference-label">Playback Options</p>', unsafe_allow_html=True)
+    st.markdown('<p class="preference-label" style="text-align: center; margin-bottom: 1.5rem;">Playback Options</p>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
-        auto_play = st.checkbox("Enable Autoplay", value=False)
+        auto_play_new = st.checkbox("🎬 Enable Autoplay", value=st.session_state.auto_play, key="autoplay_checkbox")
+        if auto_play_new != st.session_state.auto_play:
+            st.session_state.auto_play = auto_play_new
     with col2:
-        show_descriptions = st.checkbox("Show Full Descriptions", value=False)
+        show_desc_new = st.checkbox("📝 Show Full Descriptions", value=st.session_state.show_descriptions, key="desc_checkbox")
+        if show_desc_new != st.session_state.show_descriptions:
+            st.session_state.show_descriptions = show_desc_new
     st.markdown('</div>', unsafe_allow_html=True)
 else:
-    auto_play = st.session_state.get('mobile_auto_play', False)
-    show_descriptions = st.session_state.get('mobile_show_descriptions', False)
+    st.session_state.auto_play = st.session_state.get('mobile_auto_play', False)
+    st.session_state.show_descriptions = st.session_state.get('mobile_show_descriptions', False)
 
 st.markdown('</div></div>', unsafe_allow_html=True)
 
-# Close main-content div
-st.markdown('</div>', unsafe_allow_html=True)
+# Add final spacing before footer
+st.markdown('<div style="margin: 3rem 0;"></div>', unsafe_allow_html=True)
 
 # Footer
 st.markdown("""
