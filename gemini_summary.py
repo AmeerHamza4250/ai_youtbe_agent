@@ -13,7 +13,7 @@ class GeminiSummaryAgent:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
         
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('models/gemini-1.5-flash')
 
     def generate_video_summary(self, video_title, video_description, video_channel):
         """
@@ -98,6 +98,36 @@ class GeminiSummaryAgent:
         except Exception as e:
             print(f"Error extracting topics: {e}")
             return ["Educational Content", "Learning", "Tutorial"]
+
+    def generate_transcript_summary(self, video_title, video_channel, transcript):
+        """
+        Generate a comprehensive summary of a video using its transcript with Gemini API
+        """
+        try:
+            prompt = f"""
+            Please provide a comprehensive summary of this educational video based on its transcript.
+            
+            Title: {video_title}
+            Channel: {video_channel}
+            Transcript: {transcript[:4000]}
+            
+            Please provide a structured summary that includes:
+            1. **Main Topic**: What is the primary subject of this video?
+            2. **Key Points**: What are the main concepts or lessons covered?
+            3. **Learning Objectives**: What will viewers learn from this video?
+            4. **Difficulty Level**: Is this beginner, intermediate, or advanced content?
+            5. **Target Audience**: Who would benefit most from this video?
+            6. **Practical Applications**: How can this knowledge be applied?
+            7. **Related Topics**: What subjects are related to this content?
+            
+            Format the response in a clear, educational manner with proper headings and bullet points.
+            Keep the summary concise but informative (around 300-400 words).
+            """
+            response = self.model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            print(f"Error generating transcript summary: {e}")
+            return f"*Summary generation from transcript is currently unavailable. Error: {e}*"
 
 def main():
     # Test the Gemini integration

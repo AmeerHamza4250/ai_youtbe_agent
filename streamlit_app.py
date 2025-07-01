@@ -136,7 +136,7 @@ header[data-testid="stHeader"] {
 .video-grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2rem;
+  gap: 10rem;
   margin: 2rem 0;
 }
 .video-card {
@@ -148,6 +148,7 @@ header[data-testid="stHeader"] {
   flex-direction: column;
   transition: transform 0.2s, box-shadow 0.2s;
   border: 2px solid var(--primary-dark);
+  padding: 3px;
 }
 .video-card:hover {
   transform: translateY(-6px) scale(1.03);
@@ -156,7 +157,7 @@ header[data-testid="stHeader"] {
 }
 .video-thumbnail {
   width: 100%;
-  height: 180px;
+  height: 100%;
   object-fit: cover;
   border-radius: 18px 18px 0 0;
 }
@@ -378,8 +379,8 @@ def show_search_page():
                                     <div class="video-channel">📺 {video['channel']}</div>
                                     <p class="video-description">{short_desc}</p>
                                     <div class="video-actions">
-                                        <a href="{video['url']}" target="_blank" class="watch-btn">
-                                            🎥 Watch on YouTube
+                                        <a href="?video_id={video['video_id']}&title={video['title'].replace('&', '%26').replace('"', '%22').replace("'", '%27').replace('<', '%3C').replace('>', '%3E')}&channel={video['channel'].replace('&', '%26').replace('"', '%22').replace("'", '%27').replace('<', '%3C').replace('>', '%3E')}&description={video['description'].replace('&', '%26').replace('"', '%22').replace("'", '%27').replace('<', '%3C').replace('>', '%3E')}" target="_blank" class="watch-btn">
+                                            🎥 Watch Video
                                         </a>
                                         <a href="?video_id={video['video_id']}&title={video['title'].replace('&', '%26').replace('"', '%22').replace("'", '%27').replace('<', '%3C').replace('>', '%3E')}&channel={video['channel'].replace('&', '%26').replace('"', '%22').replace("'", '%27').replace('<', '%3C').replace('>', '%3E')}&description={video['description'].replace('&', '%26').replace('"', '%22').replace("'", '%27').replace('<', '%3C').replace('>', '%3E')}" class="summary-btn">
                                             📋 AI Summary
@@ -488,352 +489,99 @@ def main():
 
 def show_video_detail_page(video_id, video_title, video_channel, video_description):
     """Display the video detail page with video player and AI-generated summary"""
-    # Modern, vibrant, readable CSS for the AI summary page
-    st.markdown('''
-    <style>
-    :root {
-      --primary: #00ffc3;
-      --primary-dark: #00bfae;
-      --accent: #ff6b81;
-      --bg: #f6f8fa;
-      --bg-glass: rgba(255,255,255,0.95);
-      --header-bg: linear-gradient(90deg, #00ffc3 0%, #00bfae 100%);
-      --footer-bg: linear-gradient(90deg, #232526 0%, #414345 100%);
-      --text-main: #1a1a1a;
-      --text-muted: #444;
-      --shadow: 0 8px 32px rgba(0,0,0,0.10);
-    }
-    body, [data-testid="stAppViewContainer"] {
-      background: var(--bg) !important;
-      color: var(--text-main) !important;
-      font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important;
-    }
-    .custom-header {
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      width: 100%;
-      background: var(--header-bg);
-      box-shadow: var(--shadow);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.2rem 2.5rem 1.2rem 2.5rem;
-      border-radius: 0 0 18px 18px;
-      margin-bottom: 2rem;
-      backdrop-filter: blur(12px);
-    }
-    .header-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.7rem;
-      font-weight: 900;
-      font-size: 1.7rem;
-      color: var(--primary-dark);
-      text-decoration: none;
-      letter-spacing: 1px;
-      text-shadow: 0 2px 8px #fff;
-    }
-    .header-logo-icon {
-      font-size: 2.2rem;
-      filter: drop-shadow(0 2px 8px var(--primary));
-    }
-    .header-nav {
-      display: flex;
-      gap: 1.5rem;
-    }
-    .nav-link {
-      color: var(--text-main);
-      background: rgba(0,0,0,0.04);
-      border-radius: 10px;
-      padding: 0.7rem 1.5rem;
-      font-weight: 700;
-      font-size: 1.1rem;
-      text-decoration: none;
-      transition: background 0.2s, color 0.2s;
-      border: 2px solid transparent;
-      letter-spacing: 0.5px;
-    }
-    .nav-link:hover {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--primary-dark);
-    }
-    .video-detail-page {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem 1rem;
-    }
-    .video-detail-header {
-      background: var(--bg-glass);
-      padding: 2rem;
-      border-radius: 16px;
-      border: 2px solid var(--primary-dark);
-      margin-bottom: 2rem;
-      box-shadow: var(--shadow);
-    }
-    .video-detail-title {
-      color: var(--primary-dark);
-      font-size: 2.2rem;
-      font-weight: 900;
-      margin-bottom: 1rem;
-      line-height: 1.3;
-    }
-    .video-detail-channel {
-      color: var(--accent);
-      font-size: 1.1rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .video-detail-layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      margin-top: 2rem;
-    }
-    .video-player-container {
-      background: var(--bg-glass);
-      border-radius: 16px;
-      padding: 1.5rem;
-      border: 2px solid var(--primary-dark);
-      box-shadow: var(--shadow);
-    }
-    .video-player-frame {
-      width: 100%;
-      height: 400px;
-      border-radius: 12px;
-      border: none;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.13);
-    }
-    .summary-container {
-      background: var(--bg-glass);
-      border-radius: 16px;
-      padding: 1.5rem;
-      border: 2px solid var(--accent);
-      box-shadow: var(--shadow);
-      max-height: 500px;
-      overflow-y: auto;
-    }
-    .summary-title {
-      color: var(--accent);
-      font-size: 1.5rem;
-      font-weight: 900;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .summary-content {
-      color: var(--text-main);
-      line-height: 1.6;
-      font-size: 1.05rem;
-      font-weight: 700;
-    }
-    .summary-content h1, .summary-content h2, .summary-content h3, .summary-content h4 {
-      color: var(--accent);
-      margin-top: 1.5rem;
-      margin-bottom: 0.5rem;
-    }
-    .summary-content ul, .summary-content ol {
-      margin-left: 1.5rem;
-      margin-bottom: 1rem;
-    }
-    .summary-content li {
-      margin-bottom: 0.5rem;
-    }
-    .summary-content strong {
-      color: var(--primary-dark);
-    }
-    .video-info-section {
-      background: var(--bg-glass);
-      border-radius: 16px;
-      padding: 1.5rem;
-      border: 2px solid var(--primary-dark);
-      margin-top: 2rem;
-      box-shadow: var(--shadow);
-    }
-    .video-info-title {
-      color: var(--primary-dark);
-      font-size: 1.3rem;
-      font-weight: 900;
-      margin-bottom: 1rem;
-    }
-    .video-info-content {
-      color: var(--text-main);
-      line-height: 1.6;
-      font-weight: 700;
-    }
-    .video-info-content strong {
-      color: var(--primary-dark);
-    }
-    .youtube-link {
-      background: linear-gradient(90deg, var(--accent), #ffb86b);
-      color: #fff;
-      padding: 0.85rem 1.7rem;
-      border-radius: 12px;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-weight: 900;
-      margin-top: 1rem;
-      font-size: 1.1rem;
-      border: none;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      transition: background 0.2s, color 0.2s;
-    }
-    .youtube-link:hover {
-      background: linear-gradient(90deg, #ffb86b, var(--accent));
-      color: var(--primary-dark);
-      text-decoration: none;
-    }
-    .footer {
-      background: var(--footer-bg);
-      color: #fff;
-      padding: 2.5rem 1rem 1.5rem 1rem;
-      border-radius: 18px 18px 0 0;
-      margin-top: 3rem;
-      text-align: center;
-      box-shadow: var(--shadow);
-    }
-    .footer h3 {
-      font-size: 2.2rem;
-      font-weight: 900;
-      margin-bottom: 0.7rem;
-      background: linear-gradient(90deg, var(--primary), var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .footer p {
-      color: #fff;
-      font-size: 1.15rem;
-      margin: 0.5rem 0;
-      font-weight: 700;
-    }
-    @media (max-width: 900px) {
-      .video-detail-page { padding: 1rem 0.2rem; }
-      .video-detail-layout { gap: 1rem; }
-    }
-    @media (max-width: 600px) {
-      .custom-header { flex-direction: column; padding: 0.7rem 0.5rem; }
-      .header-nav { gap: 0.5rem; }
-      .video-detail-page { padding: 0.5rem 0.1rem; }
-      .video-info-section { padding: 1rem; }
-      .footer { padding: 1.2rem 0.2rem; }
-    }
-    </style>
-    ''', unsafe_allow_html=True)
-
-    # --- HEADER ---
-    st.markdown("""
-    <div class="custom-header" style="background: linear-gradient(90deg, #00ffc3 0%, #00bfae 50%, #ff6b81 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.10); border-radius: 0 0 18px 18px;">
-        <a href="#" class="header-logo" style="font-weight:900; color:#111; text-shadow:0 2px 8px #fff;">
-            <span class="header-logo-icon">🎓</span>
-            <span class="header-logo-text" style="color:#111; font-weight:900;">Video Learning Hub</span>
-        </a>
-        <nav class="header-nav">
-            <a href="#" class="nav-link" style="color:#fff; font-weight:800; text-shadow:0 2px 8px #222;">🏠 Home</a>
-            <a href="#" class="nav-link" style="color:#fff; font-weight:800; text-shadow:0 2px 8px #222;">🔍 Search</a>
-        </nav>
-    </div>
-    """, unsafe_allow_html=True)
+    # Fetch transcript
+    transcript = youtube_agent.get_video_transcript(video_id)
+    use_transcript = transcript and not transcript.startswith("No transcript") and not transcript.startswith("Transcripts are disabled")
 
     st.markdown('<div class="video-detail-page">', unsafe_allow_html=True)
-    
-    # Header section
     st.markdown(f"""
         <div class="video-detail-header">
             <h1 class="video-detail-title">{video_title}</h1>
             <div class="video-detail-channel">📺 {video_channel}</div>
         </div>
     """, unsafe_allow_html=True)
-    
-    # Main layout - Video player and Summary side by side
-    st.markdown('<div class="video-detail-layout">', unsafe_allow_html=True)
-    
-    # Left side - Video Player
-    st.markdown(f"""
-        <div class="video-player-container">
-            <iframe
-                src="https://www.youtube.com/embed/{video_id}?autoplay={1 if st.session_state.auto_play else 0}&rel=0"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen
-                class="video-player-frame"
-            ></iframe>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # Right side - AI Summary
-    st.markdown('<div class="summary-container">', unsafe_allow_html=True)
-    st.markdown('<h2 class="summary-title">🤖 AI-Generated Summary</h2>', unsafe_allow_html=True)
-    
-    # Generate summary using Gemini API
-    if gemini_available:
-        with st.spinner("🤖 Generating AI summary..."):
-            try:
-                summary = gemini_agent.generate_video_summary(
-                    video_title, 
-                    video_description, 
-                    video_channel
-                )
-                
-                # Display the summary
-                st.markdown(f"""
-                    <div class="summary-content">
-                        {summary}
-                    </div>
-                """, unsafe_allow_html=True)
-                
-            except Exception as e:
-                st.error(f"Error generating summary: {str(e)}")
-                st.markdown(f"""
-                    <div class="summary-content">
-                        <h4>Summary Generation Failed</h4>
-                        <p>Unable to generate AI summary at this time. Here's the video description:</p>
-                        <p>{video_description}</p>
-                    </div>
-                """, unsafe_allow_html=True)
-    else:
-        st.warning("Gemini API is not available. Please check your API key configuration.")
+
+    # Use columns for layout: left (video+summary), right (chat)
+    left_col, right_col = st.columns([2, 1], gap="large")
+    with left_col:
         st.markdown(f"""
-            <div class="summary-content">
-                <h4>Video Description</h4>
-                <p>{video_description}</p>
+            <div class="video-player-container">
+                <iframe
+                    src="https://www.youtube.com/embed/{video_id}?autoplay={1 if st.session_state.auto_play else 0}&rel=0"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                    class="video-player-frame"
+                    style="width: 100%; height: 600px;"
+                ></iframe>
             </div>
         """, unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)  # Close summary container
-    
-    st.markdown('</div>', unsafe_allow_html=True)  # Close video detail layout
-    
-    # Additional video information section
-    st.markdown(f"""
-        <div class="video-info-section">
-            <h3 class="video-info-title">📋 Video Information</h3>
-            <div class="video-info-content">
-                <p><strong>Title:</strong> {video_title}</p>
-                <p><strong>Channel:</strong> {video_channel}</p>
-                <p><strong>Description:</strong> {video_description}</p>
-                <a href="https://www.youtube.com/watch?v={video_id}" target="_blank" class="youtube-link">
-                    🎥 Watch on YouTube
-                </a>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # --- FOOTER ---
-    st.markdown("""
-    <div class="footer" style="background: linear-gradient(90deg, #232526 0%, #00ffc3 60%, #ff6b81 100%); color: #fff; border-radius: 18px 18px 0 0; margin-top: 3rem; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.10);">
-        <h3 id="video-learning-hub" style="font-size:2.2rem; font-weight:900; margin-bottom:0.7rem; color:#111;">🎥 Video Learning Hub</h3>
-        <p style="color:#fff; font-size:1.15rem; margin:0.5rem 0; font-weight:800; text-shadow:0 2px 8px #222;">Your gateway to educational content from YouTube</p>
-        <p style="font-size: 1rem; color: #fff; margin-top: 1rem; font-weight:800; text-shadow:0 2px 8px #222;">
-            © 2025 <b>AMEER HAMZA</b> / ameerhamzaconsulting@gmail.com
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+        st.markdown('<div class="summary-container">', unsafe_allow_html=True)
+        st.markdown('<h2 class="summary-title">🤖 AI-Generated Summary</h2>', unsafe_allow_html=True)
+        if gemini_available:
+            with st.spinner("🤖 Generating AI summary..."):
+                try:
+                    if use_transcript:
+                        summary = gemini_agent.generate_transcript_summary(video_title, video_channel, transcript)
+                    else:
+                        summary = gemini_agent.generate_video_summary(video_title, video_description, video_channel)
+                    st.session_state.video_summary = summary
+                    st.markdown(f"""
+                        <div class="summary-content">
+                            {summary}
+                        </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Error generating summary: {str(e)}")
+                    st.markdown(f"""
+                        <div class="summary-content">
+                            <h4>Summary Generation Failed</h4>
+                            <p>Unable to generate AI summary at this time. Here's the video description:</p>
+                            <p>{video_description}</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.warning("Gemini API is not available. Please check your API key configuration.")
+            st.markdown(f"""
+                <div class="summary-content">
+                    <h4>Video Description</h4>
+                    <p>{video_description}</p>
+                </div>
+            """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with right_col:
+        st.markdown('<div class="summary-container">', unsafe_allow_html=True)
+        st.markdown('<h2 class="summary-title">💬 Ask about this video</h2>', unsafe_allow_html=True)
+        if 'chat_history' not in st.session_state:
+            st.session_state.chat_history = []
+        # Chat input
+        user_input = st.chat_input("Ask anything about this video...")
+        # Display chat history (except the latest assistant message, which will be shown above the input)
+        for msg in st.session_state.chat_history[:-1]:
+            with st.chat_message(msg['role']):
+                st.markdown(msg['content'])
+        # If the last message is from assistant, show it above the input
+        if st.session_state.chat_history and st.session_state.chat_history[-1]['role'] == 'assistant':
+            with st.chat_message('assistant'):
+                st.markdown(st.session_state.chat_history[-1]['content'])
+        if user_input:
+            st.session_state.chat_history.append({'role': 'user', 'content': user_input})
+            context = f"Video Title: {video_title}\nChannel: {video_channel}\n"
+            if use_transcript:
+                context += f"Transcript: {transcript[:4000]}\n"
+            context += f"Summary: {st.session_state.video_summary}\n"
+            prompt = f"You are an expert video assistant. Use the following context to answer the user's question.\n\n{context}\n\nUser question: {user_input}"
+            with st.spinner("Gemini is thinking..."):
+                try:
+                    answer = gemini_agent.model.generate_content(prompt).text
+                except Exception as e:
+                    answer = f"Error: {e}"
+            st.session_state.chat_history.append({'role': 'assistant', 'content': answer})
+            # Show the assistant's answer above the input
+            with st.chat_message('assistant'):
+                st.markdown(answer)
+        st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)  # Close video detail page
 
 # Run the main application
